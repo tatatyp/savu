@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAVU – Calendario</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #e2e0d8;
+    --text: #1a1917;
+    --text-muted: #7a7870;
+    --text-hint: #b0ae a6;
+    --m70: #1a6fbd;
+    --m70-bg: #deeaf8;
+    --m60: #2e7d44;
+    --m60-bg: #d9f0e0;
+    --fis: #b83030;
+    --fis-bg: #fde0e0;
+    --cert: #9a5c00;
+    --cert-bg: #fdecd0;
+    --star-blue: #2176c7;
+    --star-green: #3b8c50;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px 16px 32px;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .header-left h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+
+  .header-left p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── Month tabs ── */
+  .month-tabs {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .month-tab {
+    padding: 7px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    border-right: 1px solid var(--border);
+  }
+
+  .month-tab:last-child { border-right: none; }
+
+  .month-tab.active {
+    background: var(--text);
+    color: #fff;
+  }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .leg {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .leg-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+  }
+
+  /* ── Calendar table wrapper ── */
+  .cal-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  /* ── Grid ── */
+  .cal-grid {
+    display: grid;
+    grid-template-columns: 40px repeat(7, 1fr) 104px;
+    width: 100%;
+  }
+
+  /* Column headers */
+  .col-head {
+    padding: 9px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: center;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Week number */
+  .week-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+
+  /* Day cell */
+  .day-cell {
+    padding: 7px 6px 6px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    min-height: 76px;
+    vertical-align: top;
+    background: var(--surface);
+    transition: background 0.1s;
+  }
+
+  .day-cell.dim { background: var(--surface2); }
+  .day-cell:hover { background: #faf9f5; }
+
+  .day-num {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    font-family: 'DM Mono', monospace;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .day-num.in-month { color: var(--text); }
+  .day-num.today { background: var(--text); color: #fff; }
+
+  /* Events */
+  .ev {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ev-m70  { background: var(--m70-bg);  color: var(--m70);  }
+  .ev-m60  { background: var(--m60-bg);  color: var(--m60);  }
+  .ev-fis  { background: var(--fis-bg);  color: var(--fis);  }
+  .ev-cert { background: var(--cert-bg); color: var(--cert); }
+
+  /* Stars cell */
+  .stars-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    padding: 4px;
+  }
+
+  .star-btn {
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    line-height: 0;
+    transition: transform 0.1s;
+  }
+
+  .star-btn:hover { transform: scale(1.2); }
+  .star-btn:active { transform: scale(0.9); }
+
+  .star-svg { width: 19px; height: 19px; display: block; }
+
+  /* Stars info row */
+  .stars-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px 0;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .stars-legend {
+    display: flex;
+    gap: 14px;
+  }
+
+  .stars-legend span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .dot-blue  { width: 8px; height: 8px; border-radius: 50%; background: var(--star-blue); display:inline-block; }
+  .dot-green { width: 8px; height: 8px; border-radius: 50%; background: var(--star-green); display:inline-block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>Calendario SAVU</h1>
+    <p>USM · Semestre 2026</p>
+  </div>
+  <div class="month-tabs" id="month-tabs">
+    <button class="month-tab active" onclick="setMonth(0)">Marzo</button>
+    <button class="month-tab" onclick="setMonth(1)">Abril</button>
+    <button class="month-tab" onclick="setMonth(2)">Mayo</button>
+    <button class="month-tab" onclick="setMonth(3)">Junio</button>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="leg"><div class="leg-dot" style="background:var(--m70-bg);border:1.5px solid var(--m70);"></div>MAT 070</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--m60-bg);border:1.5px solid var(--m60);"></div>MAT 060</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--fis-bg);border:1.5px solid var(--fis);"></div>FIS 100</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--cert-bg);border:1.5px solid var(--cert);"></div>Certamen</div>
+</div>
+
+<div class="cal-wrap">
+  <div class="cal-grid" id="cal-head">
+    <div class="col-head">Sem</div>
+    <div class="col-head">Lun</div>
+    <div class="col-head">Mar</div>
+    <div class="col-head">Mié</div>
+    <div class="col-head">Jue</div>
+    <div class="col-head">Vie</div>
+    <div class="col-head">Sáb</div>
+    <div class="col-head">Dom</div>
+    <div class="col-head">⭐ Estudio</div>
+  </div>
+  <div class="cal-grid" id="cal-body"></div>
+</div>
+
+<div class="stars-info">
+  <span>Haz clic en las estrellas para marcar tu preparación semanal</span>
+  <div class="stars-legend">
+    <span><i class="dot-blue"></i> Poco preparado</span>
+    <span><i class="dot-green"></i> Bien preparado</span>
+  </div>
+</div>
+
+<script>
+// ── Datos de evaluaciones ──────────────────────────────────────────────────
+const EVENTS = {
+  '2026-03-13': [{t:'Control M70',  c:'ev-m70'}],
+  '2026-03-16': [{t:'Control M60',  c:'ev-m60'}],
+  '2026-03-23': [{t:'Control M60',  c:'ev-m60'}],
+  '2026-03-27': [{t:'Control M70',  c:'ev-m70'}],
+  '2026-04-06': [{t:'Control M60',  c:'ev-m60'}],
+  '2026-04-10': [{t:'Control M70',  c:'ev-m70'},{t:'Control FIS100',c:'ev-fis'}],
+  '2026-04-17': [{t:'Control M70',  c:'ev-m70'},{t:'Control FIS100',c:'ev-fis'}],
+  '2026-04-20': [{t:'Control M60',  c:'ev-m60'}],
+  '2026-04-24': [{t:'Control M70',  c:'ev-m70'}],
+  '2026-04-25': [{t:'Certamen FIS100',c:'ev-cert'}],
+  '2026-05-04': [{t:'Control M60',  c:'ev-m60'}],
+  '2026-05-08': [{t:'Control M70',  c:'ev-m70'}],
+  '2026-05-15': [{t:'Control M70',  c:'ev-m70'}],
+  '2026-05-29': [{t:'Control M70',  c:'ev-m70'}],
+  '2026-06-01': [{t:'Control M60',  c:'ev-m60'}],
+  '2026-06-05': [{t:'Control M70',  c:'ev-m70'}],
+  '2026-06-08': [{t:'Control M60',  c:'ev-m60'}],
+  '2026-06-12': [{t:'Control M70',  c:'ev-m70'}],
+  '2026-06-22': [{t:'Control M60',  c:'ev-m60'}],
+  '2026-06-24': [{t:'Cert. Recup. M70',c:'ev-cert'}],
+  '2026-07-01': [{t:'Certamen Global M70',c:'ev-cert'}],
+};
+
+// ── Meses a mostrar ────────────────────────────────────────────────────────
+const MONTHS = [
+  { label:'Marzo 2026',  year:2026, month:2 },
+  { label:'Abril 2026',  year:2026, month:3 },
+  { label:'Mayo 2026',   year:2026, month:4 },
+  { label:'Junio 2026',  year:2026, month:5 },
+];
+
+// ── Estado de estrellas (persiste mientras la pestaña esté abierta) ─────────
+const starState = {};
+
+let currentMonth = 0;
+
+// ── Utilidades ─────────────────────────────────────────────────────────────
+function dk(y, m, d) {
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+function getMonday(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function isoWeek(d) {
+  const tmp = new Date(d);
+  tmp.setHours(0,0,0,0);
+  tmp.setDate(tmp.getDate() + 3 - (tmp.getDay() + 6) % 7);
+  const w1 = new Date(tmp.getFullYear(), 0, 4);
+  return 1 + Math.round(((tmp - w1) / 86400000 - 3 + (w1.getDay() + 6) % 7) / 7);
+}
+
+// ── Dibujo de estrellas SVG ────────────────────────────────────────────────
+function starSVG(filled, color) {
+  const fill   = filled ? color : 'none';
+  const stroke = filled ? color : '#c8c5bc';
+  return `<svg class="star-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+      fill="${fill}" stroke="${stroke}" stroke-width="1.6" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+// ── Render principal ───────────────────────────────────────────────────────
+function render(mi) {
+  currentMonth = mi;
+
+  // Actualizar tabs
+  document.querySelectorAll('.month-tab').forEach((t,i) => t.classList.toggle('active', i===mi));
+
+  const { year, month } = MONTHS[mi];
+  const body = document.getElementById('cal-body');
+  body.innerHTML = '';
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const todayKey = dk(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay  = new Date(year, month+1, 0);
+  let monday = getMonday(firstDay);
+
+  while (monday <= lastDay) {
+    const weekKey = dk(monday.getFullYear(), monday.getMonth(), monday.getDate());
+    const wn = isoWeek(monday);
+
+    // Semana número
+    const wCell = document.createElement('div');
+    wCell.className = 'week-num';
+    wCell.textContent = wn;
+    body.appendChild(wCell);
+
+    // 7 días
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const key = dk(d.getFullYear(), d.getMonth(), d.getDate());
+      const inMonth = d.getMonth() === month;
+
+      const cell = document.createElement('div');
+      cell.className = 'day-cell' + (inMonth ? '' : ' dim');
+
+      const numDiv = document.createElement('div');
+      numDiv.className = 'day-num' + (inMonth ? ' in-month' : '') + (key === todayKey ? ' today' : '');
+      numDiv.textContent = d.getDate();
+      cell.appendChild(numDiv);
+
+      (EVENTS[key] || []).forEach(ev => {
+        const e = document.createElement('div');
+        e.className = 'ev ' + ev.c;
+        e.textContent = ev.t;
+        cell.appendChild(e);
+      });
+
+      body.appendChild(cell);
+    }
+
+    // Celda de estrellas
+    const sCell = document.createElement('div');
+    sCell.className = 'stars-cell';
+    const filled = starState[weekKey] || 0;
+
+    for (let s = 1; s <= 4; s++) {
+      const btn = document.createElement('button');
+      btn.className = 'star-btn';
+      btn.title = `${s} estrella${s>1?'s':''}`;
+
+      const isFilled = s <= filled;
+      const color = s <= 2 ? '#2176c7' : '#3b8c50';
+      btn.innerHTML = starSVG(isFilled, color);
+
+      btn.addEventListener('click', () => {
+        // Si hace clic en la misma estrella ya seleccionada → reset
+        starState[weekKey] = (starState[weekKey] === s) ? 0 : s;
+        render(currentMonth);
+      });
+
+      sCell.appendChild(btn);
+    }
+
+    body.appendChild(sCell);
+
+    monday = new Date(monday);
+    monday.setDate(monday.getDate() + 7);
+  }
+}
+
+// ── Inicio ─────────────────────────────────────────────────────────────────
+function setMonth(mi) { render(mi); }
+render(0);
+</script>
+</body>
+</html>
